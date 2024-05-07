@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Status {
+  id       Int       @id @default(autoincrement())
+  name     String
+  products Product[]
+}
+
+model Product {
+  id      Int    @id @default(autoincrement())
+  serial  String @unique
+  batch   String
+  name    String
+  comment String
+
+  status   Status @relation(fields: [statusId], references: [id])
+  statusId Int
+}
+
+model Customer {
+  id        String  @id @default(cuid())
+  firstName String?
+  lastName  String?
+  email     String?
+  phone     String?
+
+  details String? @default("")
+
+  repairs Repair[]
+
+  createdAt DateTime @default(now())
+}
+
+model Employee {
+  // id     Int      @id @default(autoincrement())
+  id              String   @id @default(cuid())
+  active          Boolean  @default(true)
+  name            String
+  Repair          Repair[] @relation("employee")
+  repairsReceived Repair[] @relation("repairsReceived")
+}
+
+model RepairStatus {
+  id   Int     @id @default(autoincrement())
+  name String?
+
+  repairs Repair[]
+}
+
+model RepairItem {
+  id       Int     @id @default(autoincrement())
+  name     String
+  price    Int?
+  child    Boolean @default(false)
+  Repair   Repair? @relation(fields: [repairId], references: [id])
+  repairId Int?
+}
+
+model Repair {
+  id   Int    @id @default(autoincrement())
+  code String @default(nanoid(6))
+
+  receivedBy   Employee @relation("repairsReceived", fields: [receivedById], references: [id])
+  receivedById String
+
+  employee   Employee @relation("employee", fields: [employeeId], references: [id])
+  employeeId String
+
+  customer   Customer @relation(fields: [customerId], references: [id])
+  customerId String
+
+  status   RepairStatus @relation(fields: [statusId], references: [id])
+  statusId Int
+
+  details String
+
+  included String? @default("")
+
+  password String?
+
+  issue String?
+
+  items RepairItem[]
+  //computed field "total" https://www.prisma.io/docs/orm/prisma-client/queries/computed-fields
+
+  date      DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
